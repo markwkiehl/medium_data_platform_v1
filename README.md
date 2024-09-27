@@ -1,4 +1,5 @@
-Building a Data Platform on GCP
+# Building a Data Platform on GCP
+
 This is my journey of building a modern data platform with high availability, low latency, and scalability on the free tier of Google Cloud Platform. This article is Part One of a multipart series consisting of: 
 - Building a Data Platform on GCP
 - GCP Infrastructure & Authentication
@@ -7,3 +8,5 @@ This is my journey of building a modern data platform with high availability, lo
 - Google Cloud Run Jobs & Scheduler
 - Google BigQuery Cloud Database
 - Google Cloud Analytics
+
+The first article [Building a Data Platform on GCP](https://medium.com/@markwkiehl/building-a-data-platform-on-gcp-0427500f62e8) has links to all of the articles.
