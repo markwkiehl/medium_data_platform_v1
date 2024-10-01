@@ -1,6 +1,6 @@
 @echo off
 cls
-echo %~n0%~x0
+echo %~n0%~x0   version 0.0.0
 echo.
 
 rem Created by Mechatronic Solutions LLC
@@ -141,35 +141,49 @@ echo.
 
 rem Grant the user-managed service account the roles required for Cloud Run Jobs & Scheduler Jobs
 rem gcloud projects add-iam-policy-binding PROJECT_ID --member=serviceAccount:PROJECT_NUMBER-compute@developer.gserviceaccount.com --role=roles/run.invoker
+@echo on
 CALL gcloud projects add-iam-policy-binding %GCP_PROJ_ID% --member=serviceAccount:%GCP_SVC_ACT% --role=roles/run.invoker
+@echo off
 IF %ERRORLEVEL% NEQ 0 (
 	echo ERROR %ERRORLEVEL%: gcloud projects add-iam-policy-binding %GCP_PROJ_ID% --member=serviceAccount:%GCP_SVC_ACT% --role=roles/run.invoker
 	EXIT /B
 )
 
 rem gcloud projects add-iam-policy-binding PROJECT_ID --member=serviceAccount:PROJECT_NUMBER-compute@developer.gserviceaccount.com --role=roles/cloudscheduler.admin
+@echo on
 CALL gcloud projects add-iam-policy-binding %GCP_PROJ_ID% --member=serviceAccount:%GCP_SVC_ACT% --role=roles/cloudscheduler.admin
+@echo off
 IF %ERRORLEVEL% NEQ 0 (
 	echo ERROR %ERRORLEVEL%: gcloud projects add-iam-policy-binding %GCP_PROJ_ID% --member=serviceAccount:%GCP_SVC_ACT% --role=roles/cloudscheduler.admin
 	EXIT /B
 )
 
 rem Enable the Cloud Run API
+@echo on
 CALL gcloud services enable run.googleapis.com
+@echo off
 IF %ERRORLEVEL% NEQ 0 (
 	echo ERROR %ERRORLEVEL%: services enable run.googleapis.com
 	EXIT /B
 )
 
 rem Enable the Google Scheduler API
+@echo on
 CALL gcloud services enable cloudscheduler.googleapis.com
+@echo off
 IF %ERRORLEVEL% NEQ 0 (
 	echo ERROR %ERRORLEVEL%: services enable cloudscheduler.googleapis.com
 	EXIT /B
 )
 
 rem Update local ADC / user-managed service account impersonation
+echo.
+echo Google user %GCP_USER% must authorize the addition of the roles and enabled APIs.
+echo You may close the browser when authorization is complete and then return to this window.
+pause
+@echo on
 CALL gcloud auth application-default login --impersonate-service-account %GCP_SVC_ACT%
+@echo off
 IF %ERRORLEVEL% NEQ 0 (
 	echo ERROR %ERRORLEVEL%: gcloud auth application-default login --impersonate-service-account %GCP_SVC_ACT% 
 	EXIT /B
@@ -187,8 +201,12 @@ IF %ERRORLEVEL% NEQ 0 (
 
 rem Delete the Cloud Run Jobs if they exist
 rem gcloud run jobs delete JOB_NAME --region=REGION --quiet
+echo.
+@echo on
 CALL gcloud run jobs delete %GCP_RUN_JOB_PUB% --region=%GCP_REGION% --quiet
 CALL gcloud run jobs delete %GCP_RUN_JOB_SUB% --region=%GCP_REGION% --quiet
+@echo off
+echo Ignore any errors above.
 
 
 rem Create a Google Cloud Run job from the Docker image for the publisher

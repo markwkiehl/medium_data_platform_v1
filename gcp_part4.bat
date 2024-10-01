@@ -1,6 +1,6 @@
 @echo off
 cls
-echo %~n0%~x0
+echo %~n0%~x0   version 0.0.0
 echo.
 
 rem Created by Mechatronic Solutions LLC
@@ -126,8 +126,8 @@ echo are already configured in the Docker files "Dockerfile-pub.txt" and "Docker
 echo If you changed any of these, then you must edit the files "Dockerfile-pub.txt" and "Dockerfile-sub.txt". 
 echo File "Dockerfile-pub.txt" will be copied to "Dockerfile" and a Docker image will be built from it. 
 echo Later "Dockerfile-sub.txt" will be copied to "Dockerfile" and a Docker image built for it.  
-echo A Google Artifact repository named %GCP_REPOSITORY% will be created, and then the
-echo Docker images will be pushed to it. 
+echo A Google Artifact repository named %GCP_REPOSITORY% will be created (deleted first if it exists), 
+echo and then the Docker images will be pushed to it. 
 echo Press ENTER to continue, or CTRL-C to abort.
 pause
 
@@ -154,7 +154,9 @@ IF EXIST "%PATH_SCRIPT%requirements.txt" (
 
 rem Build the requirements.txt file
 echo Rebuilding the Python package installation list requirements.txt ..
+@echo on
 CALL "%PATH_VENV_SCRIPTS%\pip3.exe" freeze 1> requirements.txt
+@echo off
 IF %ERRORLEVEL% NEQ 0 (
 	echo ERROR %ERRORLEVEL%: 
 	EXIT /B
@@ -201,7 +203,9 @@ echo docker run -it -e GCP_RUN_JOBS_REGION=%GCP_REGION% -v "%appdata%//gcloud":/
 echo.
 
 rem Copy file "Dockerfile-sub.txt" to "Dockerfile
+@echo on
 CALL copy /Y Dockerfile-sub.txt Dockerfile
+@echo off
 
 rem Make sure a Dockerfile exists
 IF NOT EXIST "%PATH_SCRIPT%Dockerfile" (
@@ -237,15 +241,50 @@ echo.
 rem --------------------------------------------------------------------------------------
 rem Create a repository in Google Artifacts and push the Docker images to it
 
-rem List repositories
-rem gcloud artifacts repositories list [--project=PROJECT] [--location=LOCATION]
-CALL gcloud artifacts repositories list --project=%GCP_PROJ_ID% --location=%GCP_REGION%
+rem Enable Google Artifact Registry API 
+CALL gcloud services enable artifactregistry.googleapis.com
+IF %ERRORLEVEL% NEQ 0 (
+	echo ERROR %ERRORLEVEL%: gcloud services enable artifactregistry.googleapis.com
+	EXIT /B
+)
 
+rem In order to manage the conflict where Docker images already exist in a repository
+rem and we wish to upload a new file, the Google Artificts repository will be deleted (deletes the files).
 rem Delete a repository
 rem gcloud artifacts repositories delete REPOSITORY [--location=LOCATION] [--async]
+echo.
+echo Deleting the repository '%GCP_REPOSITORY%' and its files (if they exist).
+echo Ignore any error messages.
+@echo on
 CALL gcloud artifacts repositories delete %GCP_REPOSITORY% --location=%GCP_REGION% --quiet
+@echo off
 
-pause
+
+rem Create a repository in Google Artifact Registry using the gcloud CLI (it may already exist)
+rem gcloud artifacts repositories create REPOSITORY --repository-format=docker --location=LOCATION --description="A CUSTOM DESCRIPTION OF THE REPO"
+echo.
+@echo on
+CALL gcloud artifacts repositories create %GCP_REPOSITORY% --repository-format=docker --location=%GCP_REGION% --description="data_platform pub and sub Docker images"
+@echo off
+IF %ERRORLEVEL% NEQ 0 (
+	echo Ignore the above error if the repository already exists. 
+)
+
+
+rem List repositories for the location and project
+rem gcloud artifacts repositories list [--project=PROJECT] [--location=LOCATION]
+@echo on
+CALL gcloud artifacts repositories list --project=%GCP_PROJ_ID% --location=%GCP_REGION%
+@echo off
+
+rem Show information about a Google repository created
+rem gcloud artifacts repositories describe <REPOSITORY> --location=LOCATION
+echo.
+@echo on
+CALL gcloud artifacts repositories describe %GCP_REPOSITORY% --location=%GCP_REGION%
+@echo off
+
+
 
 rem Grant the user-managed service account the role required for Google Cloud Build
 rem gcloud projects add-iam-policy-binding PROJECT_ID --member=serviceAccount:PROJECT_NUMBER-compute@developer.gserviceaccount.com --role=roles/cloudbuild.builds.builder
@@ -255,59 +294,58 @@ IF %ERRORLEVEL% NEQ 0 (
 	EXIT /B
 )
 
-rem Enable Google Artifact Registry API
-CALL gcloud services enable artifactregistry.googleapis.com
-IF %ERRORLEVEL% NEQ 0 (
-	echo ERROR %ERRORLEVEL%: gcloud services enable artifactregistry.googleapis.com
-	EXIT /B
-)
+
+rem moved "gcloud services enable artifactregistry.googleapis.com" earlier from here
+
 
 rem Configure authentication to Artifact Registry for Docker
 rem gcloud auth configure-docker LOCATION-docker.pkg.dev
 rem NOTE: Another method that may work is:  gcloud auth configure-docker gcr.io
+@echo on
 CALL gcloud auth configure-docker %GCP_REGION%-docker.pkg.dev
+@echo off
 IF %ERRORLEVEL% NEQ 0 (
 	echo ERROR %ERRORLEVEL%: gcloud auth configure-docker %GCP_REGION%-docker.pkg.dev
 	EXIT /B
 )
 
 rem Update local ADC
+echo.
+echo Google user %GCP_USER% must authorize the addition of the roles and enabled APIs.
+echo You may close the browser when authorization is complete and then return to this window.
+pause
+@echo on
 CALL gcloud auth application-default login --impersonate-service-account %GCP_SVC_ACT%
+@echo off
 IF %ERRORLEVEL% NEQ 0 (
 	echo ERROR %ERRORLEVEL%: gcloud auth application-default login --impersonate-service-account %GCP_SVC_ACT% 
 	EXIT /B
 )
 
-rem Create a repository in Google Artifact Registry using the gcloud CLI.
-rem gcloud artifacts repositories create REPOSITORY --repository-format=docker --location=LOCATION --description="A CUSTOM DESCRIPTION OF THE REPO"
-CALL gcloud artifacts repositories create %GCP_REPOSITORY% --repository-format=docker --location=%GCP_REGION% --description="data_platform pub and sub Docker images"
-IF %ERRORLEVEL% NEQ 0 (
-	echo ERROR %ERRORLEVEL%: gcloud artifacts repositories create %GCP_REPOSITORY% --repository-format=docker --location=%GCP_REGION% --description="data_platform pub and sub Docker images"
-	EXIT /B
-)
-
-rem Show information about the Google repository created
-rem gcloud artifacts repositories describe <REPOSITORY> --location=LOCATION
-CALL gcloud artifacts repositories describe %GCP_REPOSITORY% --location=%GCP_REGION%
-
-rem List all Google repositories
-rem gcloud artifacts repositories list --limit=5
-CALL gcloud artifacts repositories list --limit=5 --location=%GCP_REGION%
 
 rem Tag the local Docker image "data-platform-pub"
 rem docker tag SOURCE-IMAGE LOCATION-docker.pkg.dev/PROJECT-ID/REPOSITORY/IMAGE:TAG
+echo.
+@echo on
 CALL docker tag %GCP_IMAGE_PUB% %GCP_REGION%-docker.pkg.dev/%GCP_PROJ_ID%/repo-data-platform/data-platform-pub
+@echo off
 IF %ERRORLEVEL% NEQ 0 (
 	echo ERROR %ERRORLEVEL%: docker tag %GCP_IMAGE_PUB% %GCP_REGION%-docker.pkg.dev/%GCP_PROJ_ID%/repo-data-platform/data-platform-pub
 	EXIT /B
 )
 
 rem List the local Docker images
+echo.
+@echo on
 CALL docker image ls
+@echo off
 
 rem Push the tagged image named "data-platform-pub" to Artifact Registry in the repository named "repo-data-platform"
 rem docker push LOCATION-docker.pkg.dev/PROJECT-ID/REPOSITORY/IMAGE
+echo.
+@echo on
 CALL docker push %GCP_REGION%-docker.pkg.dev/%GCP_PROJ_ID%/%GCP_REPOSITORY%/%GCP_IMAGE_PUB%
+@echo off
 IF %ERRORLEVEL% NEQ 0 (
 	echo ERROR %ERRORLEVEL%: docker push %GCP_REGION%-docker.pkg.dev/%GCP_PROJ_ID%/%GCP_REPOSITORY%/%GCP_IMAGE_PUB%
 	EXIT /B
@@ -315,7 +353,10 @@ IF %ERRORLEVEL% NEQ 0 (
 
 rem Push the tagged image named "data-platform-sub" to Artifact Registry in the repository named "repo-data-platform"
 rem docker push LOCATION-docker.pkg.dev/PROJECT-ID/REPOSITORY/IMAGE
+echo.
+@echo on
 CALL docker push %GCP_REGION%-docker.pkg.dev/%GCP_PROJ_ID%/%GCP_REPOSITORY%/%GCP_IMAGE_SUB%
+@echo off
 IF %ERRORLEVEL% NEQ 0 (
 	echo ERROR %ERRORLEVEL%: docker push %GCP_REGION%-docker.pkg.dev/%GCP_PROJ_ID%/%GCP_REPOSITORY%/%GCP_IMAGE_SUB%
 	EXIT /B
@@ -327,7 +368,9 @@ rem CALL gcloud artifacts files list --repository=%GCP_REPOSITORY% --location=%G
 
 rem List all files in a repository by tags
 echo.
+@echo on
 echo Docker images in Google Artifacts repository %GCP_REPOSITORY% %GCP_REGION% %GCP_PROJ_ID%
+@echo off
 rem gcloud artifacts docker images list LOCATION-docker.pkg.dev/PROJECT/REPOSITORY --include-tags
 CALL gcloud artifacts docker images list %GCP_REGION%-docker.pkg.dev/%GCP_PROJ_ID%/%GCP_REPOSITORY% --include-tags
 

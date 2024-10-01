@@ -1,6 +1,6 @@
 @echo off
 cls
-echo %~n0%~x0
+echo %~n0%~x0   version 0.0.0
 echo.
 
 rem Created by Mechatronic Solutions LLC
@@ -87,7 +87,7 @@ if EXIST "gcp_constants.bat" (
 
 
 rem ----------------------------------------------------------------------
-rem Edit the project variables below
+
 
 rem set GCP_PROJ_ID=data-platform-v0-0
 echo GCP_PROJ_ID: %GCP_PROJ_ID%

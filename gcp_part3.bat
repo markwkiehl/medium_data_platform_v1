@@ -1,6 +1,6 @@
 @echo off
 cls
-echo %~n0%~x0
+echo %~n0%~x0   version 0.0.0
 echo.
 
 rem Created by Mechatronic Solutions LLC
@@ -147,13 +147,22 @@ IF %ERRORLEVEL% NEQ 0 (
 )
 
 rem List the enabled API services
+echo.
+@echo on
 CALL gcloud services list
-echo Review the enabled APIs.  Press RETURN to continue.
+@echo off
+echo Above are the enabled APIs.  Press RETURN to continue.
 pause
 
 
 rem Update local ADC / user-managed service account impersonation
+echo.
+echo Google user %GCP_USER% must authorize the addition of the roles and enabled APIs.
+echo You may close the browser when authorization is complete and then return to this window.
+pause
+@echo on
 CALL gcloud auth application-default login --impersonate-service-account %GCP_SVC_ACT%
+@echo off
 IF %ERRORLEVEL% NEQ 0 (
 	echo ERROR %ERRORLEVEL%: gcloud auth application-default login --impersonate-service-account %GCP_SVC_ACT% 
 	EXIT /B
@@ -167,9 +176,6 @@ IF %ERRORLEVEL% NEQ 0 (
 	EXIT /B
 )
 
-rem List topics
-CALL gcloud pubsub topics list
-
 rem Create a Pub/Sub Pull subscription attached to the topic just created with exactly-once-delivery enabled.
 rem gcloud pubsub subscriptions create SUBSCRIPTION --topic TOPIC
 CALL gcloud pubsub subscriptions create %GCP_PUBSUB_SUBSCRIPTION% --topic %GCP_PUBSUB_TOPIC% --enable-exactly-once-delivery
@@ -178,8 +184,18 @@ IF %ERRORLEVEL% NEQ 0 (
 	EXIT /B
 )
 
+rem List topics
+echo.
+@echo on
+CALL gcloud pubsub topics list
+@echo off
+
+
 rem List subscriptions
+echo.
+@echo on
 CALL gcloud pubsub subscriptions list
+@echo off
 
 
 

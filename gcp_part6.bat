@@ -1,6 +1,6 @@
 @echo off
 cls
-echo %~n0%~x0
+echo %~n0%~x0   version 0.0.0
 echo.
 
 rem Created by Mechatronic Solutions LLC
@@ -117,43 +117,49 @@ pause
 echo.
 echo Granting permissions/roles to the user-managed service account 
 echo and enabling the BigQuery API.
-echo A browser window will open and ask you to approve the changes.
-echo You may close the browser tab that opens after approval is given.
-echo Press RETURN to continue, CTRL-C to abort.
-pause
 echo.
 
 rem Grant the user-managed service account the roles required for BigQuery
 rem gcloud projects add-iam-policy-binding PROJECT_ID --member=serviceAccount:PROJECT_NUMBER-compute@developer.gserviceaccount.com --role=roles/bigquery.dataViewer
+@echo on
 CALL gcloud projects add-iam-policy-binding %GCP_PROJ_ID% --member=serviceAccount:%GCP_SVC_ACT% --role=roles/bigquery.dataViewer
+@echo off
 IF %ERRORLEVEL% NEQ 0 (
 	echo ERROR %ERRORLEVEL%: gcloud projects add-iam-policy-binding %GCP_PROJ_ID% --member=serviceAccount:%GCP_SVC_ACT% --role=roles/bigquery.dataViewer
 	EXIT /B
 )
 
 rem gcloud projects add-iam-policy-binding PROJECT_ID --member=serviceAccount:PROJECT_NUMBER-compute@developer.gserviceaccount.com --role=roles/bigquery.metadataViewer
+@echo on
 CALL gcloud projects add-iam-policy-binding %GCP_PROJ_ID% --member=serviceAccount:%GCP_SVC_ACT% --role=roles/bigquery.metadataViewer
+@echo off
 IF %ERRORLEVEL% NEQ 0 (
 	echo ERROR %ERRORLEVEL%: gcloud projects add-iam-policy-binding %GCP_PROJ_ID% --member=serviceAccount:%GCP_SVC_ACT% --role=roles/bigquery.metadataViewer
 	EXIT /B
 )
 
 rem gcloud projects add-iam-policy-binding PROJECT_ID --member=serviceAccount:PROJECT_NUMBER-compute@developer.gserviceaccount.com --role=roles/bigquery.readSessionUser
+@echo on
 CALL gcloud projects add-iam-policy-binding %GCP_PROJ_ID% --member=serviceAccount:%GCP_SVC_ACT% --role=roles/bigquery.readSessionUser
+@echo off
 IF %ERRORLEVEL% NEQ 0 (
 	echo ERROR %ERRORLEVEL%: gcloud projects add-iam-policy-binding %GCP_PROJ_ID% --member=serviceAccount:%GCP_SVC_ACT% --role=roles/bigquery.readSessionUser
 	EXIT /B
 )
 
 rem gcloud projects add-iam-policy-binding PROJECT_ID --member=serviceAccount:PROJECT_NUMBER-compute@developer.gserviceaccount.com --role=roles/bigquery.user
+@echo on
 CALL gcloud projects add-iam-policy-binding %GCP_PROJ_ID% --member=serviceAccount:%GCP_SVC_ACT% --role=roles/bigquery.user
+@echo off
 IF %ERRORLEVEL% NEQ 0 (
 	echo ERROR %ERRORLEVEL%: gcloud projects add-iam-policy-binding %GCP_PROJ_ID% --member=serviceAccount:%GCP_SVC_ACT% --role=roles/bigquery.user
 	EXIT /B
 )
 
 rem gcloud projects add-iam-policy-binding PROJECT_ID --member=serviceAccount:PROJECT_NUMBER-compute@developer.gserviceaccount.com --role=roles/bigquery.dataOwner
+@echo on
 CALL gcloud projects add-iam-policy-binding %GCP_PROJ_ID% --member=serviceAccount:%GCP_SVC_ACT% --role=roles/bigquery.dataOwner
+@echo off
 IF %ERRORLEVEL% NEQ 0 (
 	echo ERROR %ERRORLEVEL%: gcloud projects add-iam-policy-binding %GCP_PROJ_ID% --member=serviceAccount:%GCP_SVC_ACT% --role=roles/bigquery.dataOwner
 	EXIT /B
@@ -172,22 +178,29 @@ echo.
 
 
 rem Enable the BigQuery API
+echo.
+@echo on
 CALL gcloud services enable bigquery.googleapis.com
+@echo off
 IF %ERRORLEVEL% NEQ 0 (
 	echo ERROR %ERRORLEVEL%: gcloud services enable bigquery.googleapis.com
 	EXIT /B
 )
 
 rem Update local ADC / user-managed service account impersonation
+echo.
+echo Google user %GCP_USER% must authorize the addition of the roles and enabled APIs.
+echo You may close the browser when authorization is complete and then return to this window.
+pause
+@echo on
 CALL gcloud auth application-default login --impersonate-service-account %GCP_SVC_ACT%
+@echo off
 IF %ERRORLEVEL% NEQ 0 (
 	echo ERROR %ERRORLEVEL%: gcloud auth application-default login --impersonate-service-account %GCP_SVC_ACT% 
 	EXIT /B
 )
-
 echo.
-echo Press RETURN to continue and create a BigQuery dataset and table.  CTRL-C to quit.
-pause
+
 
 rem Delete any dataset and tables that may already exist 
 rem Delete a dataset and all of its tables (-r), with no confirmation (-f)
@@ -261,13 +274,19 @@ IF %ERRORLEVEL% NEQ 0 (
 )
 
 echo.
+echo You can use the Google Console to check on the status of the Run Jobs and Scheduler Jobs using these links:
+echo https://console.cloud.google.com/run/jobs?project=%GCP_PROJ_ID%
+echo https://console.cloud.google.com/cloudscheduler?project=%GCP_PROJ_ID%
+
+echo.
 echo Use the command below to check on the status of generation of rows in table %BQ_TABLE_ID%
-@echo on
-CALL bq query --use_legacy_sql=false "CREATE OR REPLACE TABLE %GCP_PROJ_ID%.%BQ_DATASET_ID%.%BQ_TABLE_ID% (unix_ms INT64 NOT NULL,pub_region STRING NOT NULL,datetime_created TIMESTAMP NOT NULL,msg_trip_s FLOAT64,msg_proc_s FLOAT64,Channel_1  FLOAT64,Channel_2  FLOAT64,Channel_3  FLOAT64,Channel_4  FLOAT64,Channel_5  FLOAT64,PRIMARY KEY (unix_ms, pub_region) NOT ENFORCED);"
-@echo off
+echo (but wait at least four minutes):
+echo bq query --use_legacy_sql=false "SELECT unix_ms,pub_region,datetime_created,Channel_1 FROM %GCP_PROJ_ID%.%BQ_DATASET_ID%.%BQ_TABLE_ID% ORDER BY unix_ms;"
 
 ENDLOCAL
 
 echo.
 echo This batch file %~n0%~x0 has ended normally (no errors).  
 echo Congratulations, you may now continue with the article Part Seven - Google Cloud Analytics.
+echo When you are all done with this project, run gcp_cleanup.bat to delete the Google project
+echo and all of the associated services, Docker images, etc. 

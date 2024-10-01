@@ -1,6 +1,6 @@
 @echo off
 cls
-echo %~n0%~x0
+echo %~n0%~x0   version 0.0.0
 echo.
 
 rem Created by Mechatronic Solutions LLC
@@ -125,7 +125,7 @@ IF %ERRORLEVEL% NEQ 0 (
 )
 
 rem Create a new project and enable cloudapis.googleapis.com during creation. 
-# gcloud projects create PROJECT --enable-cloud-apis
+rem gcloud projects create PROJECT --enable-cloud-apis
 @echo on
 CALL gcloud projects create %GCP_PROJ_ID% --enable-cloud-apis
 @echo off
@@ -134,6 +134,10 @@ IF %ERRORLEVEL% NEQ 0 (
 	EXIT /B
 )
 
+echo.
+echo Below is a list of projects for the user %GCP_USER%.
+echo (Ignore "WARNING: Your active project does not match the quota project.." 
+echo  this will be resolved later).
 @echo on
 CALL gcloud projects list
 @echo off
@@ -177,9 +181,9 @@ IF %ERRORLEVEL% NEQ 0 (
 
 rem Authenticate as a user to the Google Cloud Client Libraries 
 rem gcloud auth application-default login
-echo .
-echo You must authenticate as a user to the Google Cloud Client Libraries. 
-echo You may close the browser window that opens after you have logged in and approved the changes.
+echo.
+echo Google user %GCP_USER% must authorize the addition of the roles and enabled APIs.
+echo You may close the browser when authorization is complete and then return to this window.
 pause
 @echo on
 CALL gcloud auth application-default login
@@ -253,9 +257,9 @@ IF %ERRORLEVEL% NEQ 0 (
 rem List enabled API services  (note that Google enables many by default)
 echo.
 echo Enabled API services for the default project (Google enables many by default):
-@echo off
-CALL gcloud services list
 @echo on
+CALL gcloud services list
+@echo off
 
 rem The next command will verify that the PROJECT has been set as the default
 echo.
@@ -276,8 +280,6 @@ echo List of IAM roles for a project:
 CALL gcloud projects get-iam-policy %GCP_PROJ_ID%
 @echo off
 
-rem *** stopped here ***
-
 rem Create a user-managed service account
 CALL gcloud iam service-accounts create %GCP_SVC_ACT_PREFIX% --description="Service account for Pub/Sub" --display-name="%GCP_SVC_ACT_PREFIX%"
 IF %ERRORLEVEL% NEQ 0 (
@@ -286,37 +288,50 @@ IF %ERRORLEVEL% NEQ 0 (
 )
 
 rem List all service accounts for a project
+echo.
+echo Service accounts for project %GCP_PROJ_ID%:
+@echo on
 CALL gcloud iam service-accounts list --project=%GCP_PROJ_ID%
-echo Make sure that the above matches: %GCP_SVC_ACT%
-echo Press ENTER to continue, or CTRL-C to abort so you can edit this file '%~n0%~x0'.
-pause
-
+@echo off
+echo.
 
 rem Grant the role 'roles/iam.serviceAccountTokenCreator' to the user
+@echo on
 CALL gcloud projects add-iam-policy-binding %GCP_PROJ_ID% --member=user:%GCP_USER% --role=roles/iam.serviceAccountTokenCreator
+@echo off
 IF %ERRORLEVEL% NEQ 0 (
 	echo ERROR %ERRORLEVEL%: gcloud projects add-iam-policy-binding %GCP_PROJ_ID% --member=user:%GCP_USER% --role=roles/iam.serviceAccountTokenCreator 
 	EXIT /B
 )
 
 rem Allow the service account to impersonate the user account
+@echo on
 CALL gcloud iam service-accounts add-iam-policy-binding %GCP_SVC_ACT% --member=user:%GCP_USER% --role=roles/iam.serviceAccountTokenCreator
+@echo off
 IF %ERRORLEVEL% NEQ 0 (
 	echo ERROR %ERRORLEVEL%: gcloud iam service-accounts add-iam-policy-binding %GCP_SVC_ACT% --member=user:%GCP_USER% --role=roles/iam.serviceAccountTokenCreator 
 	EXIT /B
 )
 
 
-
 rem View the roles for the project
+echo.
+@echo on
 CALL gcloud projects get-iam-policy %GCP_PROJ_ID%
+@echo off
 IF %ERRORLEVEL% NEQ 0 (
 	echo ERROR %ERRORLEVEL%: gcloud projects get-iam-policy %GCP_PROJ_ID% 
 	EXIT /B
 )
 
 rem Update local ADC / user-managed service account impersonation
+echo.
+echo Google user %GCP_USER% must authorize the addition of the roles and enabled APIs.
+echo You may close the browser when authorization is complete and then return to this window.
+pause
+@echo on
 CALL gcloud auth application-default login --impersonate-service-account %GCP_SVC_ACT%
+@echo off
 IF %ERRORLEVEL% NEQ 0 (
 	echo ERROR %ERRORLEVEL%: gcloud auth application-default login --impersonate-service-account %GCP_SVC_ACT% 
 	EXIT /B

@@ -132,50 +132,66 @@ pause
 
 rem Pause the Google Cloud Scheduler Jobs
 rem gcloud scheduler jobs pause SCHEDULER_JOB_NAME --location=SCHEDULER_REGION
+@echo on
 CALL gcloud scheduler jobs pause data-platform-pub-run-job --location=us-east4
 CALL gcloud scheduler jobs pause data-platform-sub-run-job --location=us-east4
+@echo off
+echo.
 
 rem List Scheduler Jobs
 rem gcloud scheduler jobs list --location=REGION
+@echo on
 CALL gcloud scheduler jobs list --location=%GCP_REGION%
+@echo off
 
 
 rem Delete any existing Scheduler Jobs
 echo Deleting any existing Scheduler Jobs by name..
 rem gcloud scheduler jobs delete SCHEDULER_JOB_NAME --location=REGION --quiet
+@echo on
 CALL gcloud scheduler jobs delete %GCP_RUN_JOB_PUB% --location=%GCP_REGION% --quiet
 CALL gcloud scheduler jobs delete %GCP_RUN_JOB_SUB% --location=%GCP_REGION% --quiet
+@echo off
 echo.
 
 
 rem List Scheduler Jobs
 rem gcloud scheduler jobs list --location=REGION
+@echo on
 CALL gcloud scheduler jobs list --location=%GCP_REGION%
+@echo off
+echo.
 
 
 rem List the Cloud Run Jobs by JOB URI
+@echo on
 CALL gcloud run jobs list --uri
+@echo off
+echo.
 
 rem Delete the Cloud Run Jobs if they exist
 rem gcloud run jobs delete JOB_NAME --region=REGION --quiet
+@echo on
 CALL gcloud run jobs delete %GCP_RUN_JOB_PUB% --region=%GCP_REGION% --quiet
 CALL gcloud run jobs delete %GCP_RUN_JOB_SUB% --region=%GCP_REGION% --quiet
+@echo off
+echo.
 
 rem List the Cloud Run Jobs by JOB URI
+@echo on
 CALL gcloud run jobs list --uri
+@echo off
+echo.
 
 rem List Docker images in Google Artifacts Registry
 echo.
 echo Docker images in the Google Artifacts Registry %GCP_REGION% repository %GCP_REPOSITORY%:
 rem gcloud artifacts docker images list LOCATION-docker.pkg.dev/PROJECT/REPOSITORY --include-tags
+@echo on
 CALL gcloud artifacts docker images list %GCP_REGION%-docker.pkg.dev/%GCP_PROJ_ID%/%GCP_REPOSITORY% --include-tags
-
+@echo off
 echo.
-echo Press RETURN to delete the following Docker images in the Google Artifacts repository %GCP_REPOSITORY%:
-echo 	%GCP_IMAGE_PUB%
-echo 	%GCP_IMAGE_SUB%
-echo Or do CTRL-C to abort.
-pause
+
 
 rem Delete a Docker image in Google Artifacts Registry
 rem gcloud artifacts docker images delete IMAGE
@@ -184,15 +200,13 @@ CALL gcloud artifacts docker images delete %GCP_REGION%-docker.pkg.dev/%GCP_PROJ
 CALL gcloud artifacts docker images delete %GCP_REGION%-docker.pkg.dev/%GCP_PROJ_ID%/%GCP_REPOSITORY%/%GCP_IMAGE_SUB% --quiet
 @echo off
 
-echo.
-echo Press RETURN to delete BigQuery dataset and table.  CTRL-C to abort.
-pause
 
 rem List tables 
 rem bq ls projectId:datasetId
 echo.
 echo BigQuery tables for %GCP_PROJ_ID%:%BQ_DATASET_ID%:
 CALL bq ls %GCP_PROJ_ID%:%BQ_DATASET_ID%
+echo.
 
 
 rem Remove (rm) a table
@@ -200,31 +214,37 @@ rem bq rm -f -t project_id:dataset:table_id --quiet
 @echo on
 CALL bq rm -f --quiet -t %GCP_PROJ_ID%:%BQ_DATASET_ID%:%BQ_TABLE_ID%
 @echo off
+echo.
 
 rem List tables 
 rem bq ls projectId:datasetId
 echo.
 echo BigQuery tables for %GCP_PROJ_ID%:%BQ_DATASET_ID%:
+@echo on
 CALL bq ls %GCP_PROJ_ID%:%BQ_DATASET_ID%
+@echo off
+echo.
 
 rem Delete a dataset and all of its tables (-r), with no confirmation (-f)
 rem bq rm -r -f projectId:datasetId
 @echo on
 CALL bq rm -r -f --quiet %GCP_PROJ_ID%:%BQ_DATASET_ID%
 @echo off
+echo.
 
 rem Delete the project
 @echo on
 CALL gcloud projects delete %GCP_PROJ_ID% --quiet
 @echo off
+echo.
 
-rem Show project
+rem Show projects
 @echo on
 CALL gcloud projects list
 @echo off
+echo.
 
 ENDLOCAL
 
 
-echo.
 echo This batch file has ended normally (no errors).  
