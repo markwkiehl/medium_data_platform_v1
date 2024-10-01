@@ -1,0 +1,15 @@
+GCP_USER=username@gmail.com
+GCP_SVC_ACT_PREFIX=svc-act-pubsub
+GCP_PYTHON_VERSION=3.12
+GCP_PROJ_ID=data-platform-v0-0
+GCP_BILLING_ACCOUNT=0X0X0X-0X0X0X-0X0X0X
+GCP_REGION=us-east4
+GCP_PUBSUB_TOPIC=streaming_data_packet_topic
+GCP_PUBSUB_SUBSCRIPTION=streaming_data_packet_subscription
+GCP_IMAGE_PUB=data-platform-pub
+GCP_IMAGE_SUB=data-platform-sub
+GCP_REPOSITORY=repo-data-platform
+GCP_RUN_JOB_PUB=data-platform-pub-run-job
+GCP_RUN_JOB_SUB=data-platform-sub-run-job
+BQ_DATASET_ID=ds_data_platform
+BQ_TABLE_ID=tbl_pubsub
