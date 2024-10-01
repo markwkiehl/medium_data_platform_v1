@@ -10,3 +10,6 @@ This is my journey of building a modern data platform with high availability, lo
 - Google Cloud Analytics
 
 The first article [Building a Data Platform on GCP](https://medium.com/@markwkiehl/building-a-data-platform-on-gcp-0427500f62e8) has links to all of the articles.
+
+## Download Instructions
+To download the files, find the green '<> Code' button at the top of the page, click it and select "Download ZIP".
