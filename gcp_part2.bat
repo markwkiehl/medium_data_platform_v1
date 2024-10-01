@@ -113,8 +113,8 @@ CALL gcloud config list
 
 rem Login to Google
 echo.
-echo You will be prompted to login to Google as a user.  
-echo Press RETURN to continue, CTRL-C to abort.
+echo Google user %GCP_USER% must login.
+echo You may close the browser when authorization is complete and then return to this window.
 pause
 @echo on
 CALL gcloud auth login
