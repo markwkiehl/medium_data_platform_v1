@@ -1,8 +1,0 @@
-https://miro.medium.com/v2/resize:fit:828/format:webp/1*I7hSQEbAX39HswwARzgQVA.png
-
-Building a Data Platform in 2024
-Dave Melillo
-
-https://towardsdatascience.com/building-a-data-platform-in-2024-d63c736cccef#2bbc
-
-source: "Building a Data Platform in 2024" by Dave Melillo published on Medium.com 5 Feb 2024
